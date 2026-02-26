@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Panel Admin | Sin Control</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .admin-body {
+        padding: 40px;
+        max-width: 1000px;
+        margin: auto;
+        background: #111;
+        color: white;
+      }
+      #admin-content {
+        display: none;
+      }
+      .login-box {
+        text-align: center;
+        margin-top: 100px;
+        padding: 30px;
+        background: #1a1a1a;
+        border-radius: 10px;
+        border: 1px solid var(--primary);
+      }
+      .login-box input {
+        padding: 12px;
+        width: 250px;
+        border-radius: 5px;
+        border: none;
+        margin-bottom: 15px;
+        background: #222;
+        color: white;
+      }
+      .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 30px;
+        background: #1a1a1a;
+      }
+      .admin-table th,
+      .admin-table td {
+        padding: 12px;
+        border: 1px solid #333;
+        text-align: left;
+      }
+      .admin-table input[type="text"] {
+        background: #222;
+        color: #ff007f;
+        border: 1px solid #444;
+        padding: 8px;
+        width: 90%;
+      }
+      .btn-save {
+        background: #25d366;
+        color: white;
+        padding: 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 20px;
+        font-weight: bold;
+      }
+      .preview-img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 5px;
+        background: #333;
+      }
+    </style>
+  </head>
+  <body class="admin-body">
+    <div id="login-screen" class="login-box">
+      <h2>Panel Privado</h2>
+      <input type="password" id="admin-pass" placeholder="Contraseña" />
+      <br />
+      <button class="btn-main" onclick="checkPass()">Entrar</button>
+      <p id="error-msg" style="color: red; display: none">
+        Contraseña Incorrecta
+      </p>
+    </div>
+
+    <div id="admin-content">
+      <h1>Gestión de Productos</h1>
+      <button
+        class="btn-main"
+        style="background: #ff007f"
+        onclick="addProduct()"
+      >
+        + Nuevo Producto
+      </button>
+
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Vista</th>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Subir Foto</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="admin-list"></tbody>
+      </table>
+
+      <button class="btn-save" onclick="saveData()">
+        Guardar y Publicar Tienda
+      </button>
+      <p style="margin-top: 20px; text-align: center">
+        <a href="index.html" style="color: gray">Salir</a>
+      </p>
+    </div>
+
+    <script>
+      const CLAVE_MAESTRA = "123456";
+      const DB_NAME = "sin_control_db";
+      let products = JSON.parse(localStorage.getItem(DB_NAME)) || [];
+
+      function checkPass() {
+        if (document.getElementById("admin-pass").value === CLAVE_MAESTRA) {
+          document.getElementById("login-screen").style.display = "none";
+          document.getElementById("admin-content").style.display = "block";
+          renderAdmin();
+        } else {
+          document.getElementById("error-msg").style.display = "block";
+        }
+      }
+
+      function renderAdmin() {
+        const container = document.getElementById("admin-list");
+        container.innerHTML = products
+          .map(
+            (p, i) => `
+                <tr>
+                    <td><img src="${p.imagen || ""}" class="preview-img" id="prev-${i}"></td>
+                    <td><input type="text" value="${p.nombre || ""}" id="name-${i}"></td>
+                    <td><input type="text" value="${p.precio || ""}" id="price-${i}"></td>
+                    <td><input type="file" accept="image/*" onchange="handleFile(this, ${i})"></td>
+                    <td><button onclick="deleteProduct(${i})" style="background:red; color:white; border:none; padding:5px; cursor:pointer;">X</button></td>
+                </tr>
+            `,
+          )
+          .join("");
+      }
+
+      function addProduct() {
+        products.push({ nombre: "Nuevo Producto", precio: "$0", imagen: "" });
+        renderAdmin();
+      }
+
+      function deleteProduct(index) {
+        products.splice(index, 1);
+        renderAdmin();
+      }
+
+      function handleFile(input, index) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onloadend = function () {
+          products[index].imagen = reader.result;
+          document.getElementById(`prev-${index}`).src = reader.result;
+        };
+        if (file) reader.readAsDataURL(file);
+      }
+
+      function saveData() {
+        products.forEach((p, i) => {
+          p.nombre = document.getElementById(`name-${i}`).value;
+          p.precio = document.getElementById(`price-${i}`).value;
+        });
+        localStorage.setItem(DB_NAME, JSON.stringify(products));
+        alert("¡Tienda actualizada!");
+      }
+    </script>
+  </body>
+</html>
