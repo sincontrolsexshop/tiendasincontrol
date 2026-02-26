@@ -5,70 +5,15 @@
     <title>Panel Admin | Sin Control</title>
     <link rel="stylesheet" href="style.css" />
     <style>
-      .admin-body {
-        padding: 40px;
-        max-width: 1000px;
-        margin: auto;
-        background: #111;
-        color: white;
-      }
-      #admin-content {
-        display: none;
-      }
-      .login-box {
-        text-align: center;
-        margin-top: 100px;
-        padding: 30px;
-        background: #1a1a1a;
-        border-radius: 10px;
-        border: 1px solid var(--primary);
-      }
-      .login-box input {
-        padding: 12px;
-        width: 250px;
-        border-radius: 5px;
-        border: none;
-        margin-bottom: 15px;
-        background: #222;
-        color: white;
-      }
-      .admin-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 30px;
-        background: #1a1a1a;
-      }
-      .admin-table th,
-      .admin-table td {
-        padding: 12px;
-        border: 1px solid #333;
-        text-align: left;
-      }
-      .admin-table input[type="text"] {
-        background: #222;
-        color: #ff007f;
-        border: 1px solid #444;
-        padding: 8px;
-        width: 90%;
-      }
-      .btn-save {
-        background: #25d366;
-        color: white;
-        padding: 15px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        width: 100%;
-        margin-top: 20px;
-        font-weight: bold;
-      }
-      .preview-img {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-        border-radius: 5px;
-        background: #333;
-      }
+      .admin-body { padding: 40px; max-width: 1000px; margin: auto; background: #111; color: white; }
+      #admin-content { display: none; }
+      .login-box { text-align: center; margin-top: 100px; padding: 30px; background: #1a1a1a; border-radius: 10px; border: 1px solid var(--primary); }
+      .login-box input { padding: 12px; width: 250px; border-radius: 5px; border: none; margin-bottom: 15px; background: #222; color: white; }
+      .admin-table { width: 100%; border-collapse: collapse; margin-top: 30px; background: #1a1a1a; }
+      .admin-table th, .admin-table td { padding: 12px; border: 1px solid #333; text-align: left; }
+      .admin-table input[type="text"] { background: #222; color: #ff007f; border: 1px solid #444; padding: 8px; width: 90%; }
+      .btn-save { background: #25d366; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 20px; font-weight: bold; }
+      .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; background: #333; }
     </style>
   </head>
   <body class="admin-body">
@@ -77,20 +22,12 @@
       <input type="password" id="admin-pass" placeholder="Contraseña" />
       <br />
       <button class="btn-main" onclick="checkPass()">Entrar</button>
-      <p id="error-msg" style="color: red; display: none">
-        Contraseña Incorrecta
-      </p>
+      <p id="error-msg" style="color: red; display: none">Contraseña Incorrecta</p>
     </div>
 
     <div id="admin-content">
       <h1>Gestión de Productos</h1>
-      <button
-        class="btn-main"
-        style="background: #ff007f"
-        onclick="addProduct()"
-      >
-        + Nuevo Producto
-      </button>
+      <button class="btn-main" style="background: #ff007f" onclick="addProduct()">+ Nuevo Producto</button>
 
       <table class="admin-table">
         <thead>
@@ -105,23 +42,26 @@
         <tbody id="admin-list"></tbody>
       </table>
 
-      <button class="btn-save" onclick="saveData()">
-        Guardar y Publicar Tienda
-      </button>
-      <p style="margin-top: 20px; text-align: center">
-        <a href="index.html" style="color: gray">Salir</a>
-      </p>
+      <button class="btn-save" onclick="saveData()">Guardar y Descargar JSON</button>
+      <p style="margin-top: 20px; text-align: center"><a href="index.html" style="color: gray">Salir</a></p>
     </div>
 
     <script>
       const CLAVE_MAESTRA = "123456";
-      const DB_NAME = "sin_control_db";
-      let products = JSON.parse(localStorage.getItem(DB_NAME)) || [];
+      let products = [];
 
-      function checkPass() {
+      async function checkPass() {
         if (document.getElementById("admin-pass").value === CLAVE_MAESTRA) {
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("admin-content").style.display = "block";
+          
+          // Cargar productos desde el JSON al entrar
+          try {
+            const res = await fetch('productos.json');
+            products = await res.json();
+          } catch (e) {
+            products = [];
+          }
           renderAdmin();
         } else {
           document.getElementById("error-msg").style.display = "block";
@@ -130,19 +70,15 @@
 
       function renderAdmin() {
         const container = document.getElementById("admin-list");
-        container.innerHTML = products
-          .map(
-            (p, i) => `
-                <tr>
-                    <td><img src="${p.imagen || ""}" class="preview-img" id="prev-${i}"></td>
-                    <td><input type="text" value="${p.nombre || ""}" id="name-${i}"></td>
-                    <td><input type="text" value="${p.precio || ""}" id="price-${i}"></td>
-                    <td><input type="file" accept="image/*" onchange="handleFile(this, ${i})"></td>
-                    <td><button onclick="deleteProduct(${i})" style="background:red; color:white; border:none; padding:5px; cursor:pointer;">X</button></td>
-                </tr>
-            `,
-          )
-          .join("");
+        container.innerHTML = products.map((p, i) => `
+          <tr>
+            <td><img src="${p.imagen || ""}" class="preview-img" id="prev-${i}"></td>
+            <td><input type="text" value="${p.nombre || ""}" id="name-${i}"></td>
+            <td><input type="text" value="${p.precio || ""}" id="price-${i}"></td>
+            <td><input type="file" accept="image/*" onchange="handleFile(this, ${i})"></td>
+            <td><button onclick="deleteProduct(${i})" style="background:red; color:white; border:none; padding:5px; cursor:pointer;">X</button></td>
+          </tr>
+        `).join("");
       }
 
       function addProduct() {
@@ -170,8 +106,18 @@
           p.nombre = document.getElementById(`name-${i}`).value;
           p.precio = document.getElementById(`price-${i}`).value;
         });
-        localStorage.setItem(DB_NAME, JSON.stringify(products));
-        alert("¡Tienda actualizada!");
+
+        // Crear y descargar el archivo JSON actualizado
+        const dataStr = JSON.stringify(products, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'productos.json';
+        link.click();
+        
+        alert("Archivo 'productos.json' generado. Reemplázalo en tu carpeta para aplicar los cambios.");
       }
     </script>
   </body>
