@@ -1,23 +1,24 @@
-const DB_NAME = "sin_control_db";
-
-function cargarProductos() {
+async function cargarProductos() {
   const grid = document.getElementById("product-grid");
   if (!grid) return;
 
-  const productos = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-
   grid.innerHTML = "";
 
-  if (productos.length === 0) {
-    grid.innerHTML =
-      "<p style='text-align:center; width:100%'>No hay productos publicados.</p>";
-    return;
-  }
+  try {
+    // Leer el archivo JSON físico
+    const response = await fetch("productos.json");
+    const productos = await response.json();
 
-  productos.forEach((p) => {
-    const card = document.createElement("div");
-    card.className = "product-card";
-    card.innerHTML = `
+    if (!productos || productos.length === 0) {
+      grid.innerHTML =
+        "<p style='text-align:center; width:100%'>No hay productos publicados.</p>";
+      return;
+    }
+
+    productos.forEach((p) => {
+      const card = document.createElement("div");
+      card.className = "product-card";
+      card.innerHTML = `
             <img src="${p.imagen}" alt="${p.nombre}" loading="lazy">
             <h3>${p.nombre}</h3>
             <p class="price">${p.precio}</p>
@@ -25,8 +26,13 @@ function cargarProductos() {
             <a href="https://wa.me/2241570002?text=Hola! Me interesa: ${p.nombre}" 
                target="_blank" class="btn-main">Consultar</a>
         `;
-    grid.appendChild(card);
-  });
+      grid.appendChild(card);
+    });
+  } catch (error) {
+    grid.innerHTML =
+      "<p style='text-align:center; width:100%'>Error al cargar el catálogo.</p>";
+    console.error("Error cargando JSON:", error);
+  }
 }
 
 // LÓGICA SECRETA: 4 Clics en el logo para ir al admin
@@ -40,7 +46,7 @@ if (logo) {
     clearTimeout(clickTimer);
     clickTimer = setTimeout(() => {
       clickCount = 0;
-    }, 2000); // 2 segundos para completar clics
+    }, 2000);
 
     if (clickCount === 4) {
       clickCount = 0;
